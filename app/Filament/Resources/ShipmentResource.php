@@ -97,8 +97,6 @@ class ShipmentResource extends Resource
         ]);
     }
 
-
-
     public static function table(
         \Filament\Tables\Table $table
     ): \Filament\Tables\Table {
@@ -149,7 +147,6 @@ class ShipmentResource extends Resource
             ])
             ->defaultSort('created_at', 'desc');
     }
-
 
     public static function getRelations(): array
     {
