@@ -12,12 +12,38 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 class BranchResource extends Resource
 {
     protected static ?string $model = Branch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view branches') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create branches') ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->can('update branches') ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->can('delete branches') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('delete branches') ?? false;
+    }
 
     public static function form(
         \Filament\Forms\Form $form
@@ -69,10 +95,18 @@ class BranchResource extends Resource
                     ->boolean(),
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Tables\Actions\EditAction::make()
+                    ->visible(
+                        fn(Branch $record): bool =>
+                        auth()->user()?->can('update branches') ?? false
+                    ),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Tables\Actions\DeleteBulkAction::make()
+                    ->visible(
+                        fn(): bool =>
+                        auth()->user()?->can('delete branches') ?? false
+                    ),
             ]);
     }
 

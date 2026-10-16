@@ -23,6 +23,11 @@ class RoleSeeder extends Seeder
             'manage tracking',
             'manage tariffs',
             'manage users',
+
+            'view branches',
+            'create branches',
+            'update branches',
+            'delete branches',
         ];
 
         foreach ($permissions as $permission) {
@@ -34,22 +39,24 @@ class RoleSeeder extends Seeder
         $operasional = Role::findOrCreate('admin_operasional', 'web');
         $petugas = Role::findOrCreate('petugas', 'web');
 
-        // Super admin mendapat semua permission.
+        // Super admin mendapat semua permission yang terdaftar.
         $superAdmin->syncPermissions($permissions);
 
-        // Admin operasional mengelola pengiriman dan tarif.
+        // Admin operasional dapat melihat cabang, tetapi tidak mengelolanya.
         $operasional->syncPermissions([
             'view shipments',
             'create shipments',
             'update shipments',
             'manage tracking',
             'manage tariffs',
+            'view branches',
         ]);
 
-        // Petugas dapat melihat pengiriman dan mengelola tracking.
+        // Petugas hanya dapat melihat pengiriman, tracking, dan cabang.
         $petugas->syncPermissions([
             'view shipments',
             'manage tracking',
+            'view branches',
         ]);
 
         // Bersihkan cache setelah perubahan.
