@@ -12,12 +12,38 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 class TrackingCheckpointResource extends Resource
 {
     protected static ?string $model = TrackingCheckpoint::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view shipments') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('manage tracking') ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->can('manage tracking') ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
+    }
 
     public static function form(
         \Filament\Forms\Form $form
@@ -109,10 +135,20 @@ class TrackingCheckpointResource extends Resource
             ])
             ->defaultSort('event_timestamp', 'desc')
             ->actions([
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Tables\Actions\EditAction::make()
+                    ->label('Ubah')
+                    ->visible(
+                        fn(): bool =>
+                        auth()->user()?->can('manage tracking') ?? false
+                    ),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Tables\Actions\DeleteBulkAction::make()
+                    ->label('Hapus Terpilih')
+                    ->visible(
+                        fn(): bool =>
+                        auth()->user()?->hasRole('super_admin') ?? false
+                    ),
             ]);
     }
 
