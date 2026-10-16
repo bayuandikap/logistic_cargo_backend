@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class TariffResource extends Resource
 {
@@ -28,6 +29,31 @@ class TariffResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view tariffs') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create tariffs') ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->can('update tariffs') ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->can('delete tariffs') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('delete tariffs') ?? false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -36,7 +62,7 @@ class TariffResource extends Resource
                     Forms\Components\Select::make('origin_branch_id')
                         ->label('Cabang Asal')
                         ->options(
-                            fn () => Branch::query()
+                            fn() => Branch::query()
                                 ->orderBy('name')
                                 ->pluck('name', 'id')
                         )
@@ -48,7 +74,7 @@ class TariffResource extends Resource
                     Forms\Components\Select::make('destination_branch_id')
                         ->label('Cabang Tujuan')
                         ->options(
-                            fn () => Branch::query()
+                            fn() => Branch::query()
                                 ->where('id', '!=', request()->input('origin_branch_id'))
                                 ->orderBy('name')
                                 ->pluck('name', 'id')
@@ -124,7 +150,7 @@ class TariffResource extends Resource
 
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Layanan')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'REGULAR_SEA' => 'Kargo Laut Reguler',
                         'EXPRESS_AIR' => 'Kargo Udara Ekspres',
                         'OVERLAND' => 'Kargo Darat',
@@ -166,14 +192,27 @@ class TariffResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->label('Ubah'),
+                    ->label('Ubah')
+                    ->visible(
+                        fn(Tariff $record): bool =>
+                        auth()->user()?->can('update tariffs') ?? false
+                    ),
+
                 Tables\Actions\DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label('Hapus')
+                    ->visible(
+                        fn(Tariff $record): bool =>
+                        auth()->user()?->can('delete tariffs') ?? false
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Hapus Terpilih'),
+                        ->label('Hapus Terpilih')
+                        ->visible(
+                            fn(): bool =>
+                            auth()->user()?->can('delete tariffs') ?? false
+                        ),
                 ]),
             ]);
     }
