@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 class ShipmentResource extends Resource
 {
@@ -19,6 +20,30 @@ class ShipmentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view shipments') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create shipments') ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->can('update shipments') ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->can('delete shipments') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('delete shipments') ?? false;
+    }
 
     public static function form(
         \Filament\Forms\Form $form
@@ -175,7 +200,11 @@ class ShipmentResource extends Resource
                     ->sortable(),
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Tables\Actions\EditAction::make()
+                    ->visible(
+                        fn(Shipment $record): bool =>
+                        auth()->user()?->can('update shipments') ?? false
+                    ),
             ])
             ->defaultSort('created_at', 'desc');
     }
