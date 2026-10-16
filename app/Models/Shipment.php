@@ -24,9 +24,24 @@ class Shipment extends Model
         'origin_branch_id',
         'destination_branch_id',
         'service_type',
+
+        // Freight calculation
+        'actual_weight_kg',
+        'length_cm',
+        'width_cm',
+        'height_cm',
         'chargeable_weight',
         'volume_weight',
         'total_amount',
+
+        // Applied tariff snapshot
+        'tariff_id',
+        'base_fee_applied',
+        'rate_per_kg_applied',
+        'weight_fee',
+        'volumetric_divisor_applied',
+
+        // Shipment status
         'payment_status',
         'current_status',
         'estimated_arrival',
@@ -70,6 +85,17 @@ class Shipment extends Model
             'volume_weight' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'estimated_arrival' => 'date',
+
+            'actual_weight_kg' => 'decimal:2',
+            'length_cm' => 'decimal:2',
+            'width_cm' => 'decimal:2',
+            'height_cm' => 'decimal:2',
+
+            'tariff_id' => 'integer',
+            'base_fee_applied' => 'decimal:2',
+            'rate_per_kg_applied' => 'decimal:2',
+            'weight_fee' => 'decimal:2',
+            'volumetric_divisor_applied' => 'integer',
         ];
     }
 
@@ -86,5 +112,10 @@ class Shipment extends Model
     public function checkpoints(): HasMany
     {
         return $this->hasMany(TrackingCheckpoint::class);
+    }
+
+    public function tariff(): BelongsTo
+    {
+        return $this->belongsTo(Tariff::class);
     }
 }

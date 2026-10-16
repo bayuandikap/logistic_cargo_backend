@@ -79,21 +79,53 @@ class ShipmentResource extends Resource
 
             \Filament\Forms\Components\Section::make('Berat dan Tarif')
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('chargeable_weight')
+                    \Filament\Forms\Components\TextInput::make('actual_weight_kg')
                         ->label('Berat Aktual (kg)')
-                        ->numeric()->minValue(0.01)->required(),
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01)
+                        ->required(),
+
+                    \Filament\Forms\Components\TextInput::make('length_cm')
+                        ->label('Panjang (cm)')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01)
+                        ->required(),
+
+                    \Filament\Forms\Components\TextInput::make('width_cm')
+                        ->label('Lebar (cm)')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01)
+                        ->required(),
+
+                    \Filament\Forms\Components\TextInput::make('height_cm')
+                        ->label('Tinggi (cm)')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01)
+                        ->required(),
+
+                    \Filament\Forms\Components\TextInput::make('chargeable_weight')
+                        ->label('Berat yang Ditagihkan (kg)')
+                        ->disabled()
+                        ->dehydrated(false),
 
                     \Filament\Forms\Components\TextInput::make('volume_weight')
                         ->label('Berat Volume (kg)')
-                        ->numeric()->minValue(0)->default(0)->required(),
+                        ->disabled()
+                        ->dehydrated(false),
 
                     \Filament\Forms\Components\TextInput::make('total_amount')
                         ->label('Total Biaya (Rp)')
-                        ->numeric()->minValue(0)->default(0)->required(),
+                        ->disabled()
+                        ->dehydrated(false),
 
                     \Filament\Forms\Components\DatePicker::make('estimated_arrival')
                         ->label('Estimasi Tiba'),
-                ])->columns(2),
+                ])
+                ->columns(2),
         ]);
     }
 
