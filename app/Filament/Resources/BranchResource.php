@@ -3,15 +3,17 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BranchResource\Pages;
-use App\Filament\Resources\BranchResource\RelationManagers;
 use App\Models\Branch;
-use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Model;
 
 class BranchResource extends Resource
@@ -19,6 +21,8 @@ class BranchResource extends Resource
     protected static ?string $model = Branch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationLabel = 'Cabang';
 
     public static function canViewAny(): bool
     {
@@ -32,7 +36,7 @@ class BranchResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->can('update branches') ?? false;
+        return auth()->user()?->can('edit branches') ?? false;
     }
 
     public static function canDelete(Model $record): bool
@@ -45,64 +49,62 @@ class BranchResource extends Resource
         return auth()->user()?->can('delete branches') ?? false;
     }
 
-    public static function form(
-        \Filament\Forms\Form $form
-    ): \Filament\Forms\Form {
+    public static function form(Form $form): Form
+    {
         return $form->schema([
-            \Filament\Forms\Components\TextInput::make('code')
+            TextInput::make('code')
                 ->required()
                 ->maxLength(10)
                 ->unique(ignoreRecord: true),
 
-            \Filament\Forms\Components\TextInput::make('name')
+            TextInput::make('name')
                 ->required()
                 ->maxLength(100),
 
-            \Filament\Forms\Components\TextInput::make('city')
+            TextInput::make('city')
                 ->required()
                 ->maxLength(100),
 
-            \Filament\Forms\Components\Textarea::make('address')
+            Textarea::make('address')
                 ->required()
                 ->columnSpanFull(),
 
-            \Filament\Forms\Components\TextInput::make('phone')
+            TextInput::make('phone')
                 ->tel()
                 ->maxLength(20),
 
-            \Filament\Forms\Components\Toggle::make('is_active')
+            Toggle::make('is_active')
                 ->default(true),
         ]);
     }
 
-    public static function table(
-        \Filament\Tables\Table $table
-    ): \Filament\Tables\Table {
+    public static function table(Table $table): Table
+    {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('code')
+                TextColumn::make('code')
                     ->searchable()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('city')
+                TextColumn::make('city')
                     ->searchable(),
 
-                \Filament\Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->boolean(),
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->visible(
                         fn(Branch $record): bool =>
-                        auth()->user()?->can('update branches') ?? false
+                        auth()->user()?->can('edit branches') ?? false
                     ),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\DeleteBulkAction::make()
+                DeleteBulkAction::make()
                     ->visible(
                         fn(): bool =>
                         auth()->user()?->can('delete branches') ?? false
@@ -112,9 +114,7 @@ class BranchResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

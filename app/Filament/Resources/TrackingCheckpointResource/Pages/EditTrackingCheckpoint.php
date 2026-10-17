@@ -13,7 +13,12 @@ class EditTrackingCheckpoint extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->label('Hapus')
+                ->visible(
+                    fn(): bool =>
+                    auth()->user()?->can('delete tracking checkpoints') ?? false
+                ),
         ];
     }
 }

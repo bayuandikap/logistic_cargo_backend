@@ -3,71 +3,94 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // Bersihkan cache permission.
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // Buat seluruh permission terlebih dahulu.
-        $permissions = [
-            'view shipments',
-            'create shipments',
-            'update shipments',
-            'delete shipments',
-            'manage tracking',
-            'manage tariffs',
-            'manage users',
+        $guard = 'web';
 
+        $permissions = [
+            // Branches
             'view branches',
             'create branches',
-            'update branches',
+            'edit branches',
             'delete branches',
 
+            // Tariffs
             'view tariffs',
             'create tariffs',
-            'update tariffs',
+            'edit tariffs',
             'delete tariffs',
+
+            // Shipments
+            'view shipments',
+            'create shipments',
+            'edit shipments',
+            'delete shipments',
+
+            // Tracking checkpoints
+            'view tracking checkpoints',
+            'create tracking checkpoints',
+            'edit tracking checkpoints',
+            'delete tracking checkpoints',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::findOrCreate($permission, 'web');
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => $guard,
+            ]);
         }
 
-        // Buat role.
-        $superAdmin = Role::findOrCreate('super_admin', 'web');
-        $operasional = Role::findOrCreate('admin_operasional', 'web');
-        $petugas = Role::findOrCreate('petugas', 'web');
+        $superAdmin = Role::firstOrCreate([
+            'name' => 'super_admin',
+            'guard_name' => $guard,
+        ]);
 
-        // Super admin: semua permission.
+        $adminOperasional = Role::firstOrCreate([
+            'name' => 'admin_operasional',
+            'guard_name' => $guard,
+        ]);
+
+        $petugas = Role::firstOrCreate([
+            'name' => 'petugas',
+            'guard_name' => $guard,
+        ]);
+
+        // Super admin receives every defined permission.
         $superAdmin->syncPermissions($permissions);
 
-        // Admin operasional: boleh melihat, membuat, dan mengubah tarif.
-        $operasional->syncPermissions([
-            'view shipments',
-            'create shipments',
-            'update shipments',
-            'manage tracking',
-            'manage tariffs',
+        // Operational admin: manage shipments and tracking,
+        // view branches and tariffs.
+        $adminOperasional->syncPermissions([
             'view branches',
             'view tariffs',
-            'create tariffs',
-            'update tariffs',
+
+            'view shipments',
+            'create shipments',
+            'edit shipments',
+            'delete shipments',
+
+            'view tracking checkpoints',
+            'create tracking checkpoints',
+            'edit tracking checkpoints',
+            'delete tracking checkpoints',
         ]);
 
-        // Petugas: tidak mendapat akses ke tarif.
+        // Petugas: view shipments and manage tracking updates.
         $petugas->syncPermissions([
             'view shipments',
-            'manage tracking',
-            'view branches',
+            'view tracking checkpoints',
+            'create tracking checkpoints',
+            'edit tracking checkpoints',
         ]);
 
-        // Bersihkan cache setelah perubahan.
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

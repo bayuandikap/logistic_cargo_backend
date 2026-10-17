@@ -13,7 +13,12 @@ class ListTrackingCheckpoints extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Buat Riwayat Pelacakan')
+                ->visible(
+                    fn(): bool =>
+                    auth()->user()?->can('create tracking checkpoints') ?? false
+                ),
         ];
     }
 }
