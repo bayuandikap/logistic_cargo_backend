@@ -10,7 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class TariffResource extends Resource
@@ -41,7 +40,7 @@ class TariffResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->can('update tariffs') ?? false;
+        return auth()->user()?->can('edit tariffs') ?? false;
     }
 
     public static function canDelete(Model $record): bool
@@ -75,7 +74,6 @@ class TariffResource extends Resource
                         ->label('Cabang Tujuan')
                         ->options(
                             fn() => Branch::query()
-                                ->where('id', '!=', request()->input('origin_branch_id'))
                                 ->orderBy('name')
                                 ->pluck('name', 'id')
                         )
@@ -123,7 +121,9 @@ class TariffResource extends Resource
                         ->minValue(1)
                         ->default(5000)
                         ->required()
-                        ->helperText('Default 5000: panjang × lebar × tinggi (cm) ÷ 5000.'),
+                        ->helperText(
+                            'Default 5000: panjang × lebar × tinggi (cm) ÷ 5000.'
+                        ),
 
                     Forms\Components\Toggle::make('is_active')
                         ->label('Tarif Aktif')
@@ -150,12 +150,14 @@ class TariffResource extends Resource
 
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Layanan')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        'REGULAR_SEA' => 'Kargo Laut Reguler',
-                        'EXPRESS_AIR' => 'Kargo Udara Ekspres',
-                        'OVERLAND' => 'Kargo Darat',
-                        default => $state,
-                    })
+                    ->formatStateUsing(
+                        fn(string $state): string => match ($state) {
+                            'REGULAR_SEA' => 'Kargo Laut Reguler',
+                            'EXPRESS_AIR' => 'Kargo Udara Ekspres',
+                            'OVERLAND' => 'Kargo Darat',
+                            default => $state,
+                        }
+                    )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('base_fee')
@@ -195,7 +197,7 @@ class TariffResource extends Resource
                     ->label('Ubah')
                     ->visible(
                         fn(Tariff $record): bool =>
-                        auth()->user()?->can('update tariffs') ?? false
+                        auth()->user()?->can('edit tariffs') ?? false
                     ),
 
                 Tables\Actions\DeleteAction::make()

@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ShipmentResource\Pages;
-use App\Filament\Resources\ShipmentResource\RelationManagers;
 use App\Models\Shipment;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 
 class ShipmentResource extends Resource
@@ -19,6 +16,14 @@ class ShipmentResource extends Resource
     protected static ?string $model = Shipment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Manajemen Pengiriman';
+
+    protected static ?string $navigationLabel = 'Pengiriman';
+
+    protected static ?string $modelLabel = 'Pengiriman';
+
+    protected static ?string $pluralModelLabel = 'Pengiriman';
 
     public static function canViewAny(): bool
     {
@@ -32,7 +37,7 @@ class ShipmentResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->can('update shipments') ?? false;
+        return auth()->user()?->can('edit shipments') ?? false;
     }
 
     public static function canDelete(Model $record): bool
@@ -45,25 +50,24 @@ class ShipmentResource extends Resource
         return auth()->user()?->can('delete shipments') ?? false;
     }
 
-    public static function form(
-        \Filament\Forms\Form $form
-    ): \Filament\Forms\Form {
+    public static function form(Form $form): Form
+    {
         return $form->schema([
-            \Filament\Forms\Components\Section::make('Informasi Pengiriman')
+            Forms\Components\Section::make('Informasi Pengiriman')
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('tracking_number')
+                    Forms\Components\TextInput::make('tracking_number')
                         ->label('Nomor Resi')
                         ->disabled()
                         ->dehydrated(false),
 
-                    \Filament\Forms\Components\Select::make('origin_branch_id')
+                    Forms\Components\Select::make('origin_branch_id')
                         ->label('Cabang Asal')
                         ->relationship('originBranch', 'name')
                         ->searchable()
                         ->preload()
                         ->required(),
 
-                    \Filament\Forms\Components\Select::make('destination_branch_id')
+                    Forms\Components\Select::make('destination_branch_id')
                         ->label('Cabang Tujuan')
                         ->relationship('destinationBranch', 'name')
                         ->searchable()
@@ -71,7 +75,7 @@ class ShipmentResource extends Resource
                         ->different('origin_branch_id')
                         ->required(),
 
-                    \Filament\Forms\Components\Select::make('service_type')
+                    Forms\Components\Select::make('service_type')
                         ->label('Jenis Layanan')
                         ->options([
                             'REGULAR_SEA' => 'Kargo Laut Reguler',
@@ -80,106 +84,120 @@ class ShipmentResource extends Resource
                         ])
                         ->default('REGULAR_SEA')
                         ->required(),
-                ])->columns(2),
+                ])
+                ->columns(2),
 
-            \Filament\Forms\Components\Section::make('Pengirim')
+            Forms\Components\Section::make('Pengirim')
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('sender_name')
-                        ->label('Nama Pengirim')->required(),
-                    \Filament\Forms\Components\TextInput::make('sender_phone')
-                        ->label('Telepon Pengirim')->required(),
-                    \Filament\Forms\Components\Textarea::make('sender_address')
-                        ->label('Alamat Pengirim')->required()->columnSpanFull(),
-                ])->columns(2),
+                    Forms\Components\TextInput::make('sender_name')
+                        ->label('Nama Pengirim')
+                        ->required(),
 
-            \Filament\Forms\Components\Section::make('Penerima')
-                ->schema([
-                    \Filament\Forms\Components\TextInput::make('recipient_name')
-                        ->label('Nama Penerima')->required(),
-                    \Filament\Forms\Components\TextInput::make('recipient_phone')
-                        ->label('Telepon Penerima')->required(),
-                    \Filament\Forms\Components\Textarea::make('recipient_address')
-                        ->label('Alamat Penerima')->required()->columnSpanFull(),
-                ])->columns(2),
+                    Forms\Components\TextInput::make('sender_phone')
+                        ->label('Telepon Pengirim')
+                        ->required(),
 
-            \Filament\Forms\Components\Section::make('Berat dan Tarif')
+                    Forms\Components\Textarea::make('sender_address')
+                        ->label('Alamat Pengirim')
+                        ->required()
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+
+            Forms\Components\Section::make('Penerima')
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('actual_weight_kg')
+                    Forms\Components\TextInput::make('recipient_name')
+                        ->label('Nama Penerima')
+                        ->required(),
+
+                    Forms\Components\TextInput::make('recipient_phone')
+                        ->label('Telepon Penerima')
+                        ->required(),
+
+                    Forms\Components\Textarea::make('recipient_address')
+                        ->label('Alamat Penerima')
+                        ->required()
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+
+            Forms\Components\Section::make('Berat dan Tarif')
+                ->schema([
+                    Forms\Components\TextInput::make('actual_weight_kg')
                         ->label('Berat Aktual (kg)')
                         ->numeric()
                         ->minValue(0.01)
                         ->step(0.01)
                         ->required(),
 
-                    \Filament\Forms\Components\TextInput::make('length_cm')
+                    Forms\Components\TextInput::make('length_cm')
                         ->label('Panjang (cm)')
                         ->numeric()
                         ->minValue(0.01)
                         ->step(0.01)
                         ->required(),
 
-                    \Filament\Forms\Components\TextInput::make('width_cm')
+                    Forms\Components\TextInput::make('width_cm')
                         ->label('Lebar (cm)')
                         ->numeric()
                         ->minValue(0.01)
                         ->step(0.01)
                         ->required(),
 
-                    \Filament\Forms\Components\TextInput::make('height_cm')
+                    Forms\Components\TextInput::make('height_cm')
                         ->label('Tinggi (cm)')
                         ->numeric()
                         ->minValue(0.01)
                         ->step(0.01)
                         ->required(),
 
-                    \Filament\Forms\Components\TextInput::make('chargeable_weight')
+                    Forms\Components\TextInput::make('chargeable_weight')
                         ->label('Berat yang Ditagihkan (kg)')
                         ->disabled()
                         ->dehydrated(false),
 
-                    \Filament\Forms\Components\TextInput::make('volume_weight')
+                    Forms\Components\TextInput::make('volume_weight')
                         ->label('Berat Volume (kg)')
                         ->disabled()
                         ->dehydrated(false),
 
-                    \Filament\Forms\Components\TextInput::make('total_amount')
+                    Forms\Components\TextInput::make('total_amount')
                         ->label('Total Biaya (Rp)')
                         ->disabled()
                         ->dehydrated(false),
 
-                    \Filament\Forms\Components\DatePicker::make('estimated_arrival')
+                    Forms\Components\DatePicker::make('estimated_arrival')
                         ->label('Estimasi Tiba'),
                 ])
                 ->columns(2),
         ]);
     }
 
-    public static function table(
-        \Filament\Tables\Table $table
-    ): \Filament\Tables\Table {
+    public static function table(Table $table): Table
+    {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('tracking_number')
+                Tables\Columns\TextColumn::make('tracking_number')
                     ->label('Nomor Resi')
                     ->searchable()
                     ->sortable()
                     ->copyable(),
 
-                \Filament\Tables\Columns\TextColumn::make('sender_name')
+                Tables\Columns\TextColumn::make('sender_name')
                     ->label('Pengirim')
                     ->searchable(),
 
-                \Filament\Tables\Columns\TextColumn::make('recipient_name')
+                Tables\Columns\TextColumn::make('recipient_name')
                     ->label('Penerima')
                     ->searchable(),
 
-                \Filament\Tables\Columns\TextColumn::make('originBranch.name')
+                Tables\Columns\TextColumn::make('originBranch.name')
                     ->label('Asal'),
 
-                \Filament\Tables\Columns\TextColumn::make('destinationBranch.name')
+                Tables\Columns\TextColumn::make('destinationBranch.name')
                     ->label('Tujuan'),
 
-                \Filament\Tables\Columns\TextColumn::make('current_status')
+                Tables\Columns\TextColumn::make('current_status')
                     ->label('Status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
@@ -189,21 +207,21 @@ class ShipmentResource extends Resource
                         default => 'warning',
                     }),
 
-                \Filament\Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make('total_amount')
                     ->label('Biaya')
                     ->money('IDR')
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make()
+                Tables\Actions\EditAction::make()
                     ->visible(
                         fn(Shipment $record): bool =>
-                        auth()->user()?->can('update shipments') ?? false
+                        auth()->user()?->can('edit shipments') ?? false
                     ),
             ])
             ->defaultSort('created_at', 'desc');
@@ -211,9 +229,7 @@ class ShipmentResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

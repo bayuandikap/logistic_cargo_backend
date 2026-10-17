@@ -3,10 +3,9 @@
 namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
+use App\Services\FreightCalculator;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-
-use App\Services\FreightCalculator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +16,11 @@ class EditShipment extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(
+                    fn(): bool =>
+                    auth()->user()?->can('delete shipments') ?? false
+                ),
         ];
     }
 

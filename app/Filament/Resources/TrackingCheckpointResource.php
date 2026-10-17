@@ -3,15 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TrackingCheckpointResource\Pages;
-use App\Filament\Resources\TrackingCheckpointResource\RelationManagers;
 use App\Models\TrackingCheckpoint;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 
 class TrackingCheckpointResource extends Resource
@@ -20,34 +15,41 @@ class TrackingCheckpointResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Riwayat Pelacakan';
+
+    protected static ?string $modelLabel = 'Riwayat Pelacakan';
+
+    protected static ?string $pluralModelLabel = 'Riwayat Pelacakan';
+
+    protected static ?string $navigationGroup = 'Manajemen Pengiriman';
+
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('view shipments') ?? false;
+        return auth()->user()?->can('view tracking checkpoints') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('manage tracking') ?? false;
+        return auth()->user()?->can('create tracking checkpoints') ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->can('manage tracking') ?? false;
+        return auth()->user()?->can('edit tracking checkpoints') ?? false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->hasRole('super_admin') ?? false;
+        return auth()->user()?->can('delete tracking checkpoints') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return auth()->user()?->hasRole('super_admin') ?? false;
+        return auth()->user()?->can('delete tracking checkpoints') ?? false;
     }
 
-    public static function form(
-        \Filament\Forms\Form $form
-    ): \Filament\Forms\Form {
+    public static function form(Form $form): Form
+    {
         return $form->schema([
             \Filament\Forms\Components\Select::make('shipment_id')
                 ->label('Nomor Resi')
@@ -91,9 +93,8 @@ class TrackingCheckpointResource extends Resource
         ]);
     }
 
-    public static function table(
-        \Filament\Tables\Table $table
-    ): \Filament\Tables\Table {
+    public static function table(Table $table): Table
+    {
         return $table
             ->columns([
                 \Filament\Tables\Columns\TextColumn::make('shipment.tracking_number')
@@ -107,7 +108,7 @@ class TrackingCheckpointResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'REGISTERED' => 'gray',
-                        'IN_TRANSIT' => 'info',
+                        'IN_TRANSIT',
                         'IN_MARITIME_TRANSIT' => 'info',
                         'ARRIVED_AT_DESTINATION' => 'warning',
                         'DELIVERED' => 'success',
@@ -138,8 +139,8 @@ class TrackingCheckpointResource extends Resource
                 \Filament\Tables\Actions\EditAction::make()
                     ->label('Ubah')
                     ->visible(
-                        fn(): bool =>
-                        auth()->user()?->can('manage tracking') ?? false
+                        fn(TrackingCheckpoint $record): bool =>
+                        auth()->user()?->can('edit tracking checkpoints') ?? false
                     ),
             ])
             ->bulkActions([
@@ -147,16 +148,14 @@ class TrackingCheckpointResource extends Resource
                     ->label('Hapus Terpilih')
                     ->visible(
                         fn(): bool =>
-                        auth()->user()?->hasRole('super_admin') ?? false
+                        auth()->user()?->can('delete tracking checkpoints') ?? false
                     ),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

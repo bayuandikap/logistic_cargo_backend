@@ -13,7 +13,11 @@ class EditTariff extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(
+                    fn(): bool =>
+                    auth()->user()?->can('delete tariffs') ?? false
+                ),
         ];
     }
 }
