@@ -6,27 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('tracking_checkpoints', function (Blueprint $table) {
-            $table->foreignId('branch_id')
-                ->nullable()
-                ->constrained('branches')
-                ->nullOnDelete();
-        });
+        if (! Schema::hasColumn('tracking_checkpoints', 'branch_id')) {
+            Schema::table('tracking_checkpoints', function (Blueprint $table) {
+                $table->foreignId('branch_id')
+                    ->nullable()
+                    ->constrained('branches')
+                    ->nullOnDelete();
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('tracking_checkpoints', function (Blueprint $table) {
-            $table->dropForeign(['branch_id']);
-            $table->dropColumn('branch_id');
-        });
+        if (Schema::hasColumn('tracking_checkpoints', 'branch_id')) {
+            Schema::table('tracking_checkpoints', function (Blueprint $table) {
+                $table->dropForeign(['branch_id']);
+                $table->dropColumn('branch_id');
+            });
+        }
     }
 };
