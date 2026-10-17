@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::table('tracking_checkpoints', function (Blueprint $table) {
             if (! Schema::hasColumn('tracking_checkpoints', 'branch_id')) {
-                $table->foreignId('branch_id')
-                    ->nullable()
-                    ->constrained('branches')
-                    ->nullOnDelete();
+                Schema::table('tracking_checkpoints', function (Blueprint $table) {
+                    $table->foreignId('branch_id')
+                        ->nullable()
+                        ->constrained('branches')
+                        ->nullOnDelete();
+                });
             }
 
             if (! Schema::hasColumn('tracking_checkpoints', 'location_label')) {
