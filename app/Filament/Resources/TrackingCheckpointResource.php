@@ -134,7 +134,7 @@ class TrackingCheckpointResource extends Resource
                     ->label('Cabang')
                     ->placeholder('-'),
             ])
-            ->defaultSort('event_timestamp', 'desc')
+            ->defaultSort('event_timestamp', 'asc')
             ->actions([
                 \Filament\Tables\Actions\EditAction::make()
                     ->label('Ubah')
