@@ -8,6 +8,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Shipment;
+use Illuminate\Support\Facades\DB;
 
 class TrackingCheckpointResource extends Resource
 {
@@ -85,11 +87,12 @@ class TrackingCheckpointResource extends Resource
                 ->label('Keterangan')
                 ->required()
                 ->columnSpanFull(),
-
             \Filament\Forms\Components\DateTimePicker::make('event_timestamp')
                 ->label('Waktu Kejadian')
-                ->default(now())
+                ->timezone('Asia/Jakarta')
+                ->default(fn() => now('Asia/Jakarta'))
                 ->required(),
+
         ]);
     }
 
@@ -127,14 +130,14 @@ class TrackingCheckpointResource extends Resource
 
                 \Filament\Tables\Columns\TextColumn::make('event_timestamp')
                     ->label('Waktu Kejadian')
-                    ->dateTime('d M Y H:i')
+                    ->dateTime('d M Y, H:i', 'Asia/Jakarta')
                     ->sortable(),
 
                 \Filament\Tables\Columns\TextColumn::make('branch.name')
                     ->label('Cabang')
                     ->placeholder('-'),
             ])
-            ->defaultSort('event_timestamp', 'desc')
+            ->defaultSort('event_timestamp', 'asc')
             ->actions([
                 \Filament\Tables\Actions\EditAction::make()
                     ->label('Ubah')
@@ -149,7 +152,47 @@ class TrackingCheckpointResource extends Resource
                     ->visible(
                         fn(): bool =>
                         auth()->user()?->can('delete tracking checkpoints') ?? false
-                    ),
+                    )
+                    ->before(function ($action) {
+                        $shipmentIds = $action->getRecords()
+                            ->pluck('shipment_id')
+                            ->unique()
+                            ->values()
+                            ->all();
+
+                        $action->getLivewire()->bulkDeletedShipmentIds = $shipmentIds;
+                    })
+                    ->after(function ($action) {
+                        $livewire = $action->getLivewire();
+
+                        $shipmentIds = $livewire->bulkDeletedShipmentIds ?? [];
+
+                        foreach ($shipmentIds as $shipmentId) {
+                            DB::transaction(function () use ($shipmentId) {
+                                $shipment = Shipment::query()
+                                    ->lockForUpdate()
+                                    ->find($shipmentId);
+
+                                if (! $shipment) {
+                                    return;
+                                }
+
+                                $latestCheckpoint = \App\Models\TrackingCheckpoint::query()
+                                    ->where('shipment_id', $shipmentId)
+                                    ->orderByDesc('event_timestamp')
+                                    ->orderByDesc('id')
+                                    ->first();
+
+                                $shipment->current_status = $latestCheckpoint
+                                    ? $latestCheckpoint->status
+                                    : 'REGISTERED';
+
+                                $shipment->save();
+                            });
+                        }
+
+                        $livewire->bulkDeletedShipmentIds = [];
+                    }),
             ]);
     }
 
