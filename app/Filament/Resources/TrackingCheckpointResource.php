@@ -8,6 +8,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Shipment;
+use Illuminate\Support\Facades\DB;
 
 class TrackingCheckpointResource extends Resource
 {
@@ -149,7 +151,47 @@ class TrackingCheckpointResource extends Resource
                     ->visible(
                         fn(): bool =>
                         auth()->user()?->can('delete tracking checkpoints') ?? false
-                    ),
+                    )
+                    ->before(function ($action) {
+                        $shipmentIds = $action->getRecords()
+                            ->pluck('shipment_id')
+                            ->unique()
+                            ->values()
+                            ->all();
+
+                        $action->getLivewire()->bulkDeletedShipmentIds = $shipmentIds;
+                    })
+                    ->after(function ($action) {
+                        $livewire = $action->getLivewire();
+
+                        $shipmentIds = $livewire->bulkDeletedShipmentIds ?? [];
+
+                        foreach ($shipmentIds as $shipmentId) {
+                            DB::transaction(function () use ($shipmentId) {
+                                $shipment = Shipment::query()
+                                    ->lockForUpdate()
+                                    ->find($shipmentId);
+
+                                if (! $shipment) {
+                                    return;
+                                }
+
+                                $latestCheckpoint = \App\Models\TrackingCheckpoint::query()
+                                    ->where('shipment_id', $shipmentId)
+                                    ->orderByDesc('event_timestamp')
+                                    ->orderByDesc('id')
+                                    ->first();
+
+                                $shipment->current_status = $latestCheckpoint
+                                    ? $latestCheckpoint->status
+                                    : 'REGISTERED';
+
+                                $shipment->save();
+                            });
+                        }
+
+                        $livewire->bulkDeletedShipmentIds = [];
+                    }),
             ]);
     }
 
