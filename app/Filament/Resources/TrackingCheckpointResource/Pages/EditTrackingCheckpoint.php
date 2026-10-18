@@ -35,6 +35,12 @@ class EditTrackingCheckpoint extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
+                ->label('Hapus')
+                ->requiresConfirmation()
+                ->visible(
+                    fn(TrackingCheckpoint $record): bool =>
+                    auth()->user()?->can('delete tracking checkpoints') ?? false
+                )
                 ->after(function (TrackingCheckpoint $record): void {
                     $this->syncShipmentStatus(
                         (int) $record->shipment_id
