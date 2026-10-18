@@ -24,6 +24,10 @@ class BranchResource extends Resource
 
     protected static ?string $navigationLabel = 'Cabang';
 
+    protected static ?string $modelLabel = 'Cabang';
+
+    protected static ?string $pluralModelLabel = 'Cabang';
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->can('view branches') ?? false;
