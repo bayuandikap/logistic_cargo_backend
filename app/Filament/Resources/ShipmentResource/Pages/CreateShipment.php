@@ -27,6 +27,8 @@ class CreateShipment extends CreateRecord
             ->exists();
 
         if (! $tariffExists) {
+            $this->dispatch('form-validation-error', livewireId: $this->getId());
+
             throw ValidationException::withMessages([
                 'data.origin_branch_id' =>
                 'Tarif untuk rute dan jenis layanan ini belum tersedia. '
