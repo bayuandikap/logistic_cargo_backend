@@ -87,11 +87,12 @@ class TrackingCheckpointResource extends Resource
                 ->label('Keterangan')
                 ->required()
                 ->columnSpanFull(),
-
             \Filament\Forms\Components\DateTimePicker::make('event_timestamp')
                 ->label('Waktu Kejadian')
-                ->default(now())
+                ->timezone('Asia/Jakarta')
+                ->default(fn() => now('Asia/Jakarta'))
                 ->required(),
+
         ]);
     }
 
@@ -129,7 +130,7 @@ class TrackingCheckpointResource extends Resource
 
                 \Filament\Tables\Columns\TextColumn::make('event_timestamp')
                     ->label('Waktu Kejadian')
-                    ->dateTime('d M Y H:i')
+                    ->dateTime('d M Y, H:i', 'Asia/Jakarta')
                     ->sortable(),
 
                 \Filament\Tables\Columns\TextColumn::make('branch.name')
