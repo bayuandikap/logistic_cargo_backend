@@ -102,17 +102,30 @@ class BranchResource extends Resource
             ])
             ->actions([
                 EditAction::make()
+                    ->label('Ubah')
                     ->visible(
                         fn(Branch $record): bool =>
                         auth()->user()?->can('edit branches') ?? false
                     ),
-            ])
-            ->bulkActions([
-                DeleteBulkAction::make()
+
+                \Filament\Tables\Actions\DeleteAction::make()
+                    ->label('Hapus')
+                    ->requiresConfirmation()
                     ->visible(
-                        fn(): bool =>
+                        fn(Branch $record): bool =>
                         auth()->user()?->can('delete branches') ?? false
                     ),
+            ])
+            ->bulkActions([
+                \Filament\Tables\Actions\BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->label('Hapus Terpilih')
+                        ->requiresConfirmation()
+                        ->visible(
+                            fn(): bool =>
+                            auth()->user()?->can('delete branches') ?? false
+                        ),
+                ]),
             ]);
     }
 
