@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ShipmentResource\Pages;
 
 use App\Filament\Resources\ShipmentResource;
 use App\Models\Tariff;
+use App\Models\TrackingCheckpoint;
 use App\Services\FreightCalculator;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -60,7 +61,19 @@ class CreateShipment extends CreateRecord
                 $data['volumetric_divisor_applied'] =
                     $quote['volumetric_divisor'];
 
-                return static::getModel()::create($data);
+                $shipment = static::getModel()::create($data);
+
+                TrackingCheckpoint::create([
+                    'shipment_id' => $shipment->id,
+                    'branch_id' => $shipment->origin_branch_id,
+                    'status' => 'REGISTERED',
+                    'location_label' => 'Cabang Asal',
+                    'description' => 'Pengiriman telah terdaftar di sistem.',
+                    'event_timestamp' => now(),
+                    'created_by' => auth()->id(),
+                ]);
+
+                return $shipment;
             });
         } catch (ValidationException $e) {
             throw $e;
